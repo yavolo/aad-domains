@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/xml"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"os"
 )
 
-// Structs to represent the XML structure
 type Envelope struct {
 	Body Body `xml:"Body"`
 }
@@ -31,12 +31,17 @@ type Domains struct {
 
 func main() {
 
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run main.go <domain>")
-		return
-	}
+	var domain string
 
-	domain := os.Args[1]
+	if len(os.Args) > 1 {
+		domain = os.Args[1]
+	} else {
+		scanner := bufio.NewScanner(os.Stdin)
+		if !scanner.Scan() {
+			return
+		}
+		domain = scanner.Text()
+	}
 
 	url := "https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc"
 	xmlPayload := fmt.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
@@ -77,7 +82,6 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	// Parse the XML response
 	var envelope Envelope
 	decoder := xml.NewDecoder(resp.Body)
 	err = decoder.Decode(&envelope)
